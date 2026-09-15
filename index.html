@@ -1,76 +1,26 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Twitter Cards</title>
-  <style>
-    :root{color-scheme:light;--bg:#f6f6f4;--card:#fff;--text:#242424;--muted:#8a8a86;--line:#e6e6e2}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
-    main{width:min(1180px,calc(100% - 32px));margin:48px auto 80px}
-    header{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:28px}
-    h1{font-size:25px;letter-spacing:.02em;margin:0}
-    .note{margin:6px 0 0;color:var(--muted);font-size:13px}
-    #count{font-size:12px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.025)}
-    .thumb{display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;background:#eee}
-    .body{padding:14px}
-    .name{font-weight:650;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .actions{display:flex;gap:8px;margin-top:12px}
-    button,a.btn{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);font:inherit;font-size:12px;border-radius:7px;padding:7px 10px;text-decoration:none;cursor:pointer}
-    button:hover,a.btn:hover{background:#f5f5f3}
-    .empty{display:none;padding:70px 20px;text-align:center;color:var(--muted);border:1px dashed #d6d6d0;border-radius:12px;background:#fff}
-    @media(max-width:600px){main{width:min(100% - 22px,1180px);margin-top:28px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.body{padding:10px}.actions{flex-direction:column}.actions>*{text-align:center}.note{max-width:270px}}
-  </style>
-</head>
-<body>
-<main>
-  <header>
-    <div><h1>Twitter Cards</h1><p class="note">GitHubにカードを追加・差し替え・削除するだけ。</p></div>
-    <span id="count"></span>
-  </header>
-  <section id="grid" class="grid"></section>
-  <div id="empty" class="empty">まだカードがありません。</div>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Twitter Cards</title>
+<style>
+:root{--bg:#f6f6f4;--card:#fff;--text:#242424;--muted:#858580;--line:#e2e2de}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}main{width:min(1180px,calc(100% - 32px));margin:42px auto 80px}header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:25px}h1{margin:0;font-size:25px}.sub{margin:5px 0 0;font-size:12px;color:var(--muted)}button,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:8px;padding:8px 11px;font:inherit;font-size:12px;cursor:pointer;text-decoration:none}.primary{background:#242424;color:#fff;border-color:#242424;padding:10px 15px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.thumb{width:100%;aspect-ratio:1200/630;object-fit:cover;display:block;background:#eee}.body{padding:13px}.name{font-weight:650;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}.danger{color:#a22}.empty{padding:60px;text-align:center;color:var(--muted)}dialog{border:0;border-radius:14px;padding:0;box-shadow:0 18px 70px #0003;width:min(480px,calc(100% - 28px))}dialog::backdrop{background:#0005}.modal{padding:22px}.modal h2{font-size:18px;margin:0 0 18px}.field{margin:13px 0}.field label{display:block;font-size:12px;margin-bottom:6px;color:#555}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}.field textarea{resize:vertical;min-height:70px}.preview{width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:8px;background:#eee;display:none;margin-top:10px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.status{font-size:12px;color:var(--muted);min-height:18px;margin-top:10px}.busy{opacity:.55;pointer-events:none}@media(max-width:600px){main{width:calc(100% - 22px);margin-top:25px}.grid{grid-template-columns:1fr 1fr;gap:10px}.body{padding:10px}.actions{display:grid}.primary{padding:9px 11px}}
+</style>
+</head><body><main>
+<header><div><h1>Twitter Cards</h1><p class="sub">Notionへ飛ぶXカード</p></div><button class="primary" id="addBtn">＋ カードを追加</button></header>
+<section id="grid" class="grid"></section><div id="empty" class="empty" hidden>まだカードがありません。</div>
 </main>
+<dialog id="addDialog"><form class="modal" id="addForm"><h2>カードを追加</h2><div class="field"><label>カード画像</label><input id="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required><img id="preview" class="preview"></div><div class="field"><label>カード名</label><input id="name" required placeholder="例：VOID 卓報告"></div><div class="field"><label>Notion URL</label><input id="notion" type="url" required placeholder="https://...notion.site/..."></div><div class="field"><label>説明（空欄でもOK）</label><textarea id="description" placeholder="Xカードに表示する説明"></textarea></div><div id="status" class="status"></div><div class="modal-actions"><button type="button" id="cancel">キャンセル</button><button class="primary" type="submit">追加</button></div></form></dialog>
+<input id="replaceInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
 <script>
-/*
-  カードを増やす時は cards の中に1件追加してください。
-  image : リポジトリ内の画像ファイル名
-  notion: 飛び先のNotion URL
-  slug  : Xに貼るカードURL用の名前（cards/slug/）
-*/
-const cards = [
-  {
-    name: '出佳 甜瓜',
-    image: '3.png',
-    notion: 'https://sarsland.notion.site/be5cc5cfcd4e40d2bc0bfa913f9bfd75',
-    slug: 'izuyoshi-tenka'
-  }
-];
-
-const grid=document.querySelector('#grid');
-const empty=document.querySelector('#empty');
-const count=document.querySelector('#count');
-const base=new URL('./',location.href);
-
-function cardURL(c){return new URL(`cards/${c.slug}/`,base).href}
-function copy(text,button){navigator.clipboard.writeText(text).then(()=>{const old=button.textContent;button.textContent='コピーしました';setTimeout(()=>button.textContent=old,1200)})}
-
-for(const c of cards){
-  const article=document.createElement('article');article.className='card';
-  const img=document.createElement('img');img.className='thumb';img.src=c.image;img.alt=c.name;img.loading='lazy';
-  const body=document.createElement('div');body.className='body';
-  const name=document.createElement('div');name.className='name';name.textContent=c.name;
-  const actions=document.createElement('div');actions.className='actions';
-  const copyBtn=document.createElement('button');copyBtn.textContent='X用URLコピー';copyBtn.onclick=()=>copy(cardURL(c),copyBtn);
-  const notion=document.createElement('a');notion.className='btn';notion.href=c.notion;notion.target='_blank';notion.rel='noopener';notion.textContent='Notion ↗';
-  actions.append(copyBtn,notion);body.append(name,actions);article.append(img,body);grid.append(article);
-}
-count.textContent=`${cards.length} cards`;
-empty.style.display=cards.length?'none':'block';
-</script>
-</body>
-</html>
+const API='https://twitter-card-api.sarscoc.workers.dev';
+const cards=[{id:'izuyoshi-tenka',name:'出佳 甜瓜',imagePath:'3.png',notion:'https://sarsland.notion.site/be5cc5cfcd4e40d2bc0bfa913f9bfd75'}];
+const grid=document.querySelector('#grid'),empty=document.querySelector('#empty'),dlg=document.querySelector('#addDialog'),form=document.querySelector('#addForm'),file=document.querySelector('#image'),preview=document.querySelector('#preview'),statusEl=document.querySelector('#status'),replaceInput=document.querySelector('#replaceInput');let replacing=null;
+function cardUrl(c){return new URL(`cards/${c.id}/`,location.href).href}function imageUrl(c){return new URL(c.imagePath,location.href).href}function save(){localStorage.setItem('twitterCards',JSON.stringify(cards))}try{const stored=JSON.parse(localStorage.getItem('twitterCards'));if(Array.isArray(stored)){for(const c of stored)if(!cards.some(x=>x.id===c.id))cards.push(c)}}catch{}
+function render(){grid.innerHTML='';empty.hidden=cards.length>0;for(const c of cards){const el=document.createElement('article');el.className='card';el.innerHTML=`<img class="thumb" src="${imageUrl(c)}?v=${Date.now()}" alt=""><div class="body"><div class="name"></div><div class="actions"><button data-copy>X用URLコピー</button><a class="btn" target="_blank" rel="noopener">Notion ↗</a><button data-replace>画像差し替え</button><button class="danger" data-delete>削除</button></div></div>`;el.querySelector('.name').textContent=c.name;el.querySelector('a').href=c.notion;el.querySelector('[data-copy]').onclick=async e=>{await navigator.clipboard.writeText(cardUrl(c));const b=e.currentTarget,o=b.textContent;b.textContent='コピーしました';setTimeout(()=>b.textContent=o,1000)};el.querySelector('[data-replace]').onclick=()=>{replacing=c;replaceInput.click()};el.querySelector('[data-delete]').onclick=()=>removeCard(c,el);grid.append(el)}}
+document.querySelector('#addBtn').onclick=()=>dlg.showModal();document.querySelector('#cancel').onclick=()=>dlg.close();file.onchange=()=>{const f=file.files[0];if(f){preview.src=URL.createObjectURL(f);preview.style.display='block'}};
+function toDataUrl(f){return new Promise((res,rej)=>{const r=new FileReader;r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)})}function ext(f){const a=f.name.split('.').pop().toLowerCase();return ['png','jpg','jpeg','webp','gif'].includes(a)?a:(f.type==='image/webp'?'webp':f.type==='image/jpeg'?'jpg':'png')}
+form.onsubmit=async e=>{e.preventDefault();const f=file.files[0];if(!f)return;form.classList.add('busy');statusEl.textContent='アップロードしています…';try{const imageBase64=await toDataUrl(f);const r=await fetch(API+'/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.querySelector('#name').value,notion:document.querySelector('#notion').value,description:document.querySelector('#description').value,imageBase64,imageExtension:ext(f)})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'追加できませんでした');cards.unshift({id:d.id,name:d.name,imagePath:d.imagePath,notion:d.notion});save();render();form.reset();preview.style.display='none';statusEl.textContent='';dlg.close()}catch(err){statusEl.textContent='エラー：'+err.message}finally{form.classList.remove('busy')}};
+replaceInput.onchange=async()=>{const f=replaceInput.files[0],c=replacing;if(!f||!c)return;try{const imageBase64=await toDataUrl(f);const r=await fetch(API+'/image',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:c.imagePath,imageBase64})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'差し替えできませんでした');setTimeout(render,700)}catch(err){alert('エラー：'+err.message)}finally{replaceInput.value='';replacing=null}};
+async function removeCard(c,el){if(!confirm(`「${c.name}」を削除しますか？`))return;el.classList.add('busy');try{const r=await fetch(API+'/card',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,imagePath:c.imagePath})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'削除できませんでした');const i=cards.indexOf(c);if(i>=0)cards.splice(i,1);save();render()}catch(err){el.classList.remove('busy');alert('エラー：'+err.message)}}
+render();
+</script></body></html>
