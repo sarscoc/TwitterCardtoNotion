@@ -1,0 +1,83 @@
+name: Manage Twitter Cards
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Card operation
+        required: true
+        type: choice
+        options:
+          - save
+          - delete
+      id:
+        description: Card ID
+        required: true
+        type: string
+      type:
+        description: Card category
+        required: false
+        type: string
+        default: other
+      notion_url:
+        description: Public Notion URL
+        required: false
+        type: string
+      image_path:
+        description: Repository image path
+        required: false
+        type: string
+      created_at:
+        description: Original creation timestamp
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: twitter-cards-data
+  cancel-in-progress: false
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: \${{ github.token }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Update card data and page
+        env:
+          CARD_OPERATION: \${{ inputs.operation }}
+          CARD_ID: \${{ inputs.id }}
+          CARD_TYPE: \${{ inputs.type }}
+          NOTION_URL: \${{ inputs.notion_url }}
+          IMAGE_PATH: \${{ inputs.image_path }}
+          CREATED_AT: \${{ inputs.created_at }}
+        run: node .github/scripts/manage-card.mjs
+
+      - name: Commit generated changes
+        env:
+          CARD_ID: \${{ inputs.id }}
+          CARD_OPERATION: \${{ inputs.operation }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- cards.json "cards/\${CARD_ID}"
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git commit -m "Manage Twitter card: \${CARD_OPERATION} \${CARD_ID}"
+          git push origin HEAD:main
