@@ -64,7 +64,7 @@ jobs:
           NOTION_URL: ${{ inputs.notion_url }}
           IMAGE_PATH: ${{ inputs.image_path }}
           CREATED_AT: ${{ inputs.created_at }}
-        run: node .github/scripts/manage-card.mjs
+        run: node .github/scripts/manage-card-v2.mjs
 
       - name: Commit generated changes
         env:
