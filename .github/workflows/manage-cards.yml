@@ -49,7 +49,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-          token: \${{ github.token }}
+          token: ${{ github.token }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -58,26 +58,26 @@ jobs:
 
       - name: Update card data and page
         env:
-          CARD_OPERATION: \${{ inputs.operation }}
-          CARD_ID: \${{ inputs.id }}
-          CARD_TYPE: \${{ inputs.type }}
-          NOTION_URL: \${{ inputs.notion_url }}
-          IMAGE_PATH: \${{ inputs.image_path }}
-          CREATED_AT: \${{ inputs.created_at }}
+          CARD_OPERATION: ${{ inputs.operation }}
+          CARD_ID: ${{ inputs.id }}
+          CARD_TYPE: ${{ inputs.type }}
+          NOTION_URL: ${{ inputs.notion_url }}
+          IMAGE_PATH: ${{ inputs.image_path }}
+          CREATED_AT: ${{ inputs.created_at }}
         run: node .github/scripts/manage-card.mjs
 
       - name: Commit generated changes
         env:
-          CARD_ID: \${{ inputs.id }}
-          CARD_OPERATION: \${{ inputs.operation }}
+          CARD_ID: ${{ inputs.id }}
+          CARD_OPERATION: ${{ inputs.operation }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- cards.json "cards/\${CARD_ID}"
+          git add -A
           if git diff --cached --quiet; then
             echo "No generated changes to commit."
             exit 0
           fi
-          git commit -m "Manage Twitter card: \${CARD_OPERATION} \${CARD_ID}"
+          git commit -m "Manage Twitter card: ${CARD_OPERATION} ${CARD_ID}"
           git push origin HEAD:main
