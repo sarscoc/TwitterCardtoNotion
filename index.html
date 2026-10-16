@@ -196,7 +196,7 @@ const id=editingId||crypto.randomUUID();
 const isEditing=!!editingId;
 const submitButton=form.querySelector('button[type="submit"]'),cancelButton=$('#cancel');
 submitButton.disabled=true;cancelButton.disabled=true;form.classList.add('busy');form.setAttribute('aria-busy','true');
-if(isEditing){busyCards[id]=true}else{pendingAdd={id,type:$('#type').value,name:'カードを追加中…',description:'',imagePath:cards[0]?.imagePath||'',notion:$('#notion').value.trim(),createdAt:new Date().toISOString(),updatedAt:'',pending:true};busyCards[id]=true}
+if(isEditing){busyCards[id]=true}else{pendingAdd={id,type:$('#type').value,name:'カードを追加中…',description:'',imagePath:'',notion:$('#notion').value.trim(),createdAt:new Date().toISOString(),updatedAt:'',pending:true};busyCards[id]=true}
 dlg.close();uploadSpinner.hidden=false;render();
 try{
 let imagePath=editing?.imagePath||'';
