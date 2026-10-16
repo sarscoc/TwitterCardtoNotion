@@ -143,6 +143,12 @@ dialog::backdrop{background:#26262040;backdrop-filter:blur(2px)}
 
 .cursor-copy-feedback{position:fixed;left:0;top:0;z-index:99999;pointer-events:none;opacity:0;transform:translate3d(10px,10px,0) scale(.96);padding:4px 7px;border-radius:4px;background:rgba(28,28,26,.88);color:#fff;font:500 10px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.015em;white-space:nowrap;box-shadow:0 2px 7px #00000016;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:opacity .12s ease,transform .12s ease}
 .cursor-copy-feedback.show{opacity:1;transform:translate3d(10px,10px,0) scale(1)}
+
+/* Keep an opened ellipsis menu above neighboring gallery cards. */
+.gallery-card.menu-open{z-index:9999!important;transform:none!important}
+.gallery-card.menu-open .gallery-card-tools{z-index:10000}
+.gallery-card .moremenu.open{display:block;z-index:10001;min-width:108px;padding:5px;border:0;border-radius:8px;background:#fff;box-shadow:0 8px 28px #0000001c}
+.gallery-card .moremenu.open button{position:relative;z-index:1}
 </style>
 </head>
 <body>
@@ -230,12 +236,17 @@ content.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagatio
 content.querySelectorAll('[data-more]').forEach(b=>b.onclick=e=>{
 e.stopPropagation();
 const m=content.querySelector('[data-menu="'+b.dataset.more+'"]');
-content.querySelectorAll('.moremenu').forEach(x=>x!==m&&x.classList.remove('open'));
-if(m)m.classList.toggle('open');
+const card=b.closest('.gallery-card');
+const shouldOpen=!!m&&!m.classList.contains('open');
+content.querySelectorAll('.moremenu').forEach(x=>x.classList.remove('open'));
+content.querySelectorAll('.gallery-card.menu-open').forEach(x=>x.classList.remove('menu-open'));
+if(shouldOpen&&m){m.classList.add('open');if(card)card.classList.add('menu-open')}
 });
-}
 document.addEventListener('click',e=>{
-if(!e.target.closest('.morewrap'))document.querySelectorAll('.moremenu.open').forEach(x=>x.classList.remove('open'));
+if(!e.target.closest('.morewrap')){
+document.querySelectorAll('.moremenu.open').forEach(x=>x.classList.remove('open'));
+document.querySelectorAll('.gallery-card.menu-open').forEach(x=>x.classList.remove('menu-open'));
+}
 });
 
 async function checkReady(c){try{const stamp=Date.now();const [page,image]=await Promise.all([fetch(cardURL(c)+'?ready='+stamp,{cache:'no-store'}),fetch(new URL(c.imagePath,location.href).href+'?ready='+stamp,{cache:'no-store'})]);if(!page.ok||!image.ok)return false;const html=await page.text();return html.includes(c.imagePath)&&html.includes(c.notion)&&html.includes(c.name)}catch{return false}}async function watchReady(c){if(ready[c.id]===true)return;ready[c.id]=false;for(let i=0;i<60;i++){if(!cards.some(x=>x.id===c.id))return;if(await checkReady(c)){ready[c.id]=true;render();return}await new Promise(r=>setTimeout(r,5000))}}function watchAll(){cards.forEach(c=>watchReady(c))}
