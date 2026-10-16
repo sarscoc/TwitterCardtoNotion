@@ -60,39 +60,112 @@ function allowedNotionUrl(value) {
   }
   return url.href;
 }
+function pageIdFromUrl(url) {
+  const pathname = decodeURIComponent(new URL(url).pathname);
+  const match = pathname.replace(/[^0-9a-f]/gi, "").match(/([0-9a-f]{32})$/i);
+  if (!match) return "";
+  const hex = match[1].toLowerCase();
+  return hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20);
+}
+
+function titleFromRuns(runs) {
+  if (!Array.isArray(runs)) return "";
+  return runs.map(run => Array.isArray(run) ? String(run[0] ?? "") : typeof run === "string" ? run : "").join("").trim();
+}
+
+function isGenericNotionTitle(value) {
+  const title = String(value || "").replace(/\s+/g, " ").trim();
+  return /^notion\s*[|｜│:—-]\s*where teams and agents work together$/i.test(title) ||
+    /^notion\s*[|｜│:—-]\s*(?:a workspace for your notes|the connected workspace)$/i.test(title);
+}
+
 async function getNotionMetadata(url) {
-  const response = await fetch(url, {
-    redirect: "follow",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; TwitterCardtoNotion/1.0)",
-      "Accept": "text/html,application/xhtml+xml"
+  const parsed = new URL(url);
+  let name = "";
+  let apiError = "";
+
+  // Public Notion pages are React shells; their actual page title is available
+  // from Notion's own public page-chunk API, not reliably from <meta> tags.
+  const pageId = pageIdFromUrl(url);
+  if (pageId) {
+    const apiBase = parsed.hostname.toLowerCase().endsWith(".notion.site")
+      ? parsed.origin + "/api/v3"
+      : "https://www.notion.so/api/v3";
+    try {
+      const response = await fetch(apiBase + "/loadCachedPageChunkV2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (notion-reader)"
+        },
+        body: JSON.stringify({
+          page: { id: pageId },
+          limit: 100,
+          cursor: { stack: [] },
+          chunkNumber: 0,
+          verticalColumns: false
+        })
+      });
+      if (!response.ok) {
+        apiError = "Notion API HTTP " + response.status;
+      } else {
+        const chunk = await response.json();
+        const blocks = chunk?.recordMap?.block || {};
+        const normalizedId = pageId.replace(/-/g, "").toLowerCase();
+        let record = blocks[pageId];
+        if (!record) {
+          record = Object.entries(blocks).find(([key, item]) =>
+            String(key).replace(/-/g, "").toLowerCase() === normalizedId ||
+            String(item?.value?.value?.id || item?.value?.id || "").replace(/-/g, "").toLowerCase() === normalizedId
+          )?.[1];
+        }
+        const pageBlock = record?.value?.value || record?.value || record;
+        name = titleFromRuns(pageBlock?.properties?.title);
+        if (!name) apiError = "Notion API returned no page title";
+      }
+    } catch (error) {
+      apiError = error?.message || String(error);
     }
-  });
-  if (!response.ok) {
-    throw new Error("Notionページを取得できませんでした（HTTP " + response.status + "）。公開ページか確認してください。");
+  } else {
+    apiError = "The URL does not contain a 32-character Notion page ID";
   }
-  const html = await response.text();
-  const meta = {};
-  for (const item of html.matchAll(/<meta\b[^>]*>/gi)) {
-    const attrs = parseAttributes(item[0]);
-    const key = String(attrs.property || attrs.name || attrs.itemprop || "").toLowerCase();
-    if (key && attrs.content) meta[key] = attrs.content;
+
+  // Fallback to HTML metadata only when it looks like a real page title.
+  if (!name || isGenericNotionTitle(name)) {
+    try {
+      const response = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; TwitterCardtoNotion/1.0)",
+          "Accept": "text/html,application/xhtml+xml"
+        }
+      });
+      if (response.ok) {
+        const html = await response.text();
+        const meta = {};
+        for (const item of html.matchAll(/<meta\b[^>]*>/gi)) {
+          const attrs = parseAttributes(item[0]);
+          const key = String(attrs.property || attrs.name || attrs.itemprop || "").toLowerCase();
+          if (key && attrs.content) meta[key] = attrs.content;
+        }
+        const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+        const htmlTitle = titleMatch ? decodeEntities(titleMatch[1].replace(/<[^>]*>/g, "").trim()) : "";
+        const candidates = [htmlTitle, meta["og:title"], meta["twitter:title"]];
+        name = candidates.map(value => String(value || "").replace(/\s*[|｜│]\s*Notion\s*$/i, "").trim())
+          .find(value => value && !isGenericNotionTitle(value)) || "";
+      }
+    } catch {
+      // A useful error is reported below when neither source yields a title.
+    }
   }
-  let rawTitle = meta["og:title"] || meta["twitter:title"] || "";
-  if (!rawTitle) {
-    const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
-    rawTitle = titleMatch ? decodeEntities(titleMatch[1].replace(/<[^>]*>/g, "").trim()) : "";
-  }
-  let name = String(rawTitle).replace(/\s*[|｜│]\s*Notion\s*$/i, "").trim();
-  if (!name) {
-    const pathPart = new URL(url).pathname.split("/").filter(Boolean).pop() || "";
-    name = pathPart.replace(/-[0-9a-f]{32}$/i, "").replace(/-/g, " ").trim();
-  }
-  if (!name) {
-    throw new Error("Notionページのタイトルを取得できませんでした。ページを公開し、タイトルが設定されているか確認してください。");
+
+  if (!name || isGenericNotionTitle(name)) {
+    throw new Error("Notionのページタイトルを取得できませんでした。ページがWeb公開されているか、正しいNotionページURLか確認してください。" + (apiError ? " (" + apiError + ")" : ""));
   }
   return { name, description: name + "│Notion" };
 }
+
 function makeCardHtml(card) {
   const cardUrl = SITE_BASE + "cards/" + encodeURIComponent(card.id) + "/";
   const imageUrl = new URL(card.imagePath, SITE_BASE).href;
