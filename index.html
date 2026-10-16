@@ -136,7 +136,7 @@ dialog::backdrop{background:#26262040;backdrop-filter:blur(2px)}
 .gallery-card .moremenu .danger:hover{background:#f2f2ef!important;box-shadow:none!important;transform:none!important}
 .gallery-card .thumb-wrap .spinner-overlay{z-index:3;border-radius:8px}
 .gallery-card .thumb-wrap .spinner{width:20px;height:20px}
-.gallery-copy-target.copied:after{position:absolute;top:50%;left:50%;z-index:5;padding:6px 9px;transform:translate(-50%,-50%);border:0;border-radius:7px;background:#fff;color:#222;content:"COPIED";font-size:9px;font-weight:700;letter-spacing:.1em;box-shadow:0 2px 10px #00000012}
+
 @media(max-width:900px){main{width:calc(100% - 30px);padding-top:23px}.toolbar{gap:5px}.search{max-width:none;min-width:100px}.gallery-mode{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:10px}.grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}}
 @media(max-width:650px){main{width:calc(100% - 18px);padding-top:16px;padding-bottom:30px}.head{padding-bottom:10px}.head h1{font-size:24px}.toolbar{flex-wrap:wrap;gap:3px;margin:8px 0 6px;padding-bottom:5px}.tabs{width:100%;justify-content:space-between}.tabs button{flex:1;padding:6px 4px}.search{order:initial;flex:1 1 100%;max-width:none;margin-left:0;padding:7px 8px}.toolbar select{flex:1;max-width:none;padding:6px 7px}.view{margin-left:0;padding-left:3px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gallery-mode{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gallery-card .thumb-wrap{aspect-ratio:16/9}.gallery-card-tools{top:auto;bottom:4px;left:4px;right:4px;min-height:25px}.gallery-title{font-size:11px;padding:1px 0}.gallery-card .more{width:23px;height:25px;min-height:25px;font-size:17px!important}.gallery-card .moremenu{top:26px}.row{height:39px;gap:6px;padding:0 6px}.row.headrow{height:26px}.rowactions{gap:8px}.body{padding:6px 0 0}.name{font-size:11px}.actions{gap:4px;margin-top:6px;padding-top:6px}.actions button,.actions a.btn{padding:4px 6px;font-size:10px}.modal{padding:18px}.modal h2{font-size:17px}.empty{padding:40px 10px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
@@ -198,8 +198,7 @@ const c=cards.find(x=>x.id===b.dataset.copy);
 if(!c||ready[c.id]!==true)return;
 try{
 await navigator.clipboard.writeText(cardURL(c));
-b.classList.add('copied');
-setTimeout(()=>b.classList.remove('copied'),650);
+
 }catch(err){alert('URLをコピーできませんでした。ブラウザーのクリップボード権限を確認してください。')}
 });
 content.querySelectorAll('[data-edit]').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=cards.find(x=>x.id===b.dataset.edit);if(c)openEdit(c)});
