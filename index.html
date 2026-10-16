@@ -242,6 +242,7 @@ content.querySelectorAll('.moremenu').forEach(x=>x.classList.remove('open'));
 content.querySelectorAll('.gallery-card.menu-open').forEach(x=>x.classList.remove('menu-open'));
 if(shouldOpen&&m){m.classList.add('open');if(card)card.classList.add('menu-open')}
 });
+}
 document.addEventListener('click',e=>{
 if(!e.target.closest('.morewrap')){
 document.querySelectorAll('.moremenu.open').forEach(x=>x.classList.remove('open'));
